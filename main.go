@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	dh "github.com/foxboron/dh-make-golang"
 	"github.com/google/go-github/github"
 	"github.com/gregjones/httpcache"
 )
@@ -47,15 +48,15 @@ func main() {
 	case "help":
 		usage()
 	case "search":
-		execSearch(args[1:])
+		dh.ExecSearch(args[1:])
 	case "create-salsa-project":
-		execCreateSalsaProject(args[1:])
+		dh.ExecCreateSalsaProject(args[1:])
 	case "estimate":
-		execEstimate(args[1:])
+		dh.ExecEstimate(args[1:])
 	case "make":
-		execMake(args[1:], nil)
+		dh.ExecMake(args[1:], nil)
 	default:
 		// redirect -help to the global usage
-		execMake(args, usage)
+		dh.ExecMake(args, usage)
 	}
 }

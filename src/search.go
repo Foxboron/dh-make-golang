@@ -1,4 +1,4 @@
-package main
+package src
 
 import (
 	"encoding/json"
@@ -45,7 +45,7 @@ func getGolangBinaries() (map[string]string, error) {
 	return golangBinaries, nil
 }
 
-func execSearch(args []string) {
+func ExecSearch(args []string) {
 	fs := flag.NewFlagSet("search", flag.ExitOnError)
 
 	fs.Usage = func() {

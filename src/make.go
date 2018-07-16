@@ -1,4 +1,4 @@
-package main
+package src
 
 import (
 	"flag"
@@ -688,7 +688,7 @@ func copyFile(src, dest string) error {
 	return output.Close()
 }
 
-func execMake(args []string, usage func()) {
+func ExecMake(args []string, usage func()) {
 	fs := flag.NewFlagSet("make", flag.ExitOnError)
 	if usage != nil {
 		fs.Usage = usage

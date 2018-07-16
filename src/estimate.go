@@ -1,4 +1,4 @@
-package main
+package src
 
 import (
 	"flag"
@@ -173,7 +173,7 @@ func estimate(importpath string) error {
 	return nil
 }
 
-func execEstimate(args []string) {
+func ExecEstimate(args []string) {
 	fs := flag.NewFlagSet("estimate", flag.ExitOnError)
 
 	fs.Usage = func() {
