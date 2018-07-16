@@ -380,7 +380,7 @@ func normalizeDebianProgramName(str string) string {
 }
 
 // This follows https://fedoraproject.org/wiki/PackagingDrafts/Go#Package_Names
-func debianNameFromGopkg(gopkg, t string, allowUnknownHoster bool) string {
+func NameFromGopkg(gopkg, t string, allowUnknownHoster bool) string {
 	parts := strings.Split(gopkg, "/")
 
 	if t == "program" {
@@ -746,10 +746,10 @@ func ExecMake(args []string, usage func()) {
 		gopkg = rr.Root
 	}
 
-	debsrc := debianNameFromGopkg(gopkg, "library", allowUnknownHoster)
+	debsrc := NameFromGopkg(gopkg, "library", allowUnknownHoster)
 
 	if strings.TrimSpace(pkgType) != "" {
-		debsrc = debianNameFromGopkg(gopkg, pkgType, allowUnknownHoster)
+		debsrc = NameFromGopkg(gopkg, pkgType, allowUnknownHoster)
 		if _, err := os.Stat(debsrc); err == nil {
 			log.Fatalf("Output directory %q already exists, aborting\n", debsrc)
 		}
@@ -786,7 +786,7 @@ func ExecMake(args []string, usage func()) {
 		if u.firstMain != "" {
 			log.Printf("Assuming you are packaging a program (because %q defines a main package), use -type to override\n", u.firstMain)
 			pkgType = "program"
-			debsrc = debianNameFromGopkg(gopkg, pkgType, allowUnknownHoster)
+			debsrc = NameFromGopkg(gopkg, pkgType, allowUnknownHoster)
 		} else {
 			pkgType = "library"
 		}
@@ -830,7 +830,7 @@ func ExecMake(args []string, usage func()) {
 	for _, dep := range u.repoDeps {
 		if len(golangBinaries) == 0 {
 			// fall back to heuristic
-			debdependencies = append(debdependencies, debianNameFromGopkg(dep, "library", allowUnknownHoster)+"-dev")
+			debdependencies = append(debdependencies, NameFromGopkg(dep, "library", allowUnknownHoster)+"-dev")
 			continue
 		}
 		bin, ok := golangBinaries[dep]
