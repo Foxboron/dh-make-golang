@@ -13,7 +13,7 @@ import (
 // To update, use:
 // curl -s https://api.github.com/licenses | jq '.[].key'
 // then compare with https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/#license-specification
-var githubLicenseToDebianLicense = map[string]string{
+var GithubLicenseToDistroLicense = map[string]string{
 	//"agpl-3.0" (not in debian?)
 	"apache-2.0":   "Apache-2.0",
 	"artistic-2.0": "Artistic-2.0",
@@ -127,7 +127,7 @@ func getLicenseForGopkg(gopkg string) (string, string, error) {
 		return "", "", err
 	}
 
-	rl, _, err := gitHub.Repositories.License(context.TODO(), owner, repo)
+	rl, _, err := GitHub.Repositories.License(context.TODO(), owner, repo)
 	if err != nil {
 		return "", "", err
 	}
@@ -149,7 +149,7 @@ func getAuthorAndCopyrightForGopkg(gopkg string) (string, string, error) {
 		return "", "", err
 	}
 
-	rr, _, err := gitHub.Repositories.Get(context.TODO(), owner, repo)
+	rr, _, err := GitHub.Repositories.Get(context.TODO(), owner, repo)
 	if err != nil {
 		return "", "", err
 	}
@@ -158,7 +158,7 @@ func getAuthorAndCopyrightForGopkg(gopkg string) (string, string, error) {
 		return "", "", fmt.Errorf("Repository owner URL not present in API response")
 	}
 
-	ur, _, err := gitHub.Users.Get(context.TODO(), rr.GetOwner().GetLogin())
+	ur, _, err := GitHub.Users.Get(context.TODO(), rr.GetOwner().GetLogin())
 	if err != nil {
 		return "", "", err
 	}
@@ -179,7 +179,7 @@ func getDescriptionForGopkg(gopkg string) (string, error) {
 		return "", err
 	}
 
-	rr, _, err := gitHub.Repositories.Get(context.TODO(), owner, repo)
+	rr, _, err := GitHub.Repositories.Get(context.TODO(), owner, repo)
 	if err != nil {
 		return "", err
 	}

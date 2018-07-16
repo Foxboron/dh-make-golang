@@ -28,7 +28,7 @@ func getLongDescriptionForGopkg(gopkg string) (string, error) {
 	}
 	owner, repo := parts[0], parts[1]
 
-	rr, _, err := gitHub.Repositories.GetReadme(context.TODO(), owner, repo, nil)
+	rr, _, err := GitHub.Repositories.GetReadme(context.TODO(), owner, repo, nil)
 	if err != nil {
 		return "", err
 	}
