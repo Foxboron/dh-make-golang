@@ -113,6 +113,18 @@ func (u *upstream) Tar(gopath, repo string) error {
 	return cmd.Run()
 }
 
+func (u *upstream) RemoveVendor() error {
+	if len(u.vendorDirs) > 0 {
+		log.Printf("Deleting upstream vendor/ directories")
+		for _, dir := range u.vendorDirs {
+			if err := os.RemoveAll(filepath.Join(u.repoDir, dir)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // findMains finds main packages within the repo (useful to auto-detect the
 // package type).
 func (u *upstream) findMains(gopath, repo string) error {
@@ -236,14 +248,6 @@ func NewUpstreamSource(gopath, repo, revision string) (*upstream, error) {
 	u.vendorDirs, err = findVendorDirs(u.repoDir)
 	if err != nil {
 		return nil, err
-	}
-	if len(u.vendorDirs) > 0 {
-		log.Printf("Deleting upstream vendor/ directories")
-		for _, dir := range u.vendorDirs {
-			if err := os.RemoveAll(filepath.Join(repoDir, dir)); err != nil {
-				return nil, err
-			}
-		}
 	}
 
 	log.Printf("Determining upstream version number\n")
@@ -780,6 +784,11 @@ func ExecMake(args []string, usage func()) {
 	u, err := NewUpstreamSource(gopath, gopkg, gitRevision)
 	if err != nil {
 		log.Fatalf("Could not create a tarball of the upstream source: %v\n", err)
+	}
+
+	// Remove vendor directory
+	if err := u.RemoveVendor(); err != nil {
+		log.Fatalf("Could not remove vendor from the upstream source: %v\n", err)
 	}
 
 	// Tar archive
