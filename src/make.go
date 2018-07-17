@@ -68,6 +68,7 @@ func findVendorDirs(dir string) ([]string, error) {
 // upstream describes the upstream repo we are about to package.
 type upstream struct {
 	tarPath    string   // path to the generated orig tarball
+	repoDir    string   // path to the repository
 	version    string   // Debian package version number, e.g. 0.0~git20180204.1d24609-1
 	firstMain  string   // import path of the first main package within repo, if any
 	vendorDirs []string // all vendor sub directories, relative to the repo directory
@@ -211,15 +212,12 @@ func (u *upstream) findDependencies(gopath, repo string) error {
 	return nil
 }
 
-func makeUpstreamSourceTarball(repo, revision string) (*upstream, error) {
-	gopath, err := ioutil.TempDir("", "dh-make-golang")
-	if err != nil {
-		return nil, err
-	}
-	defer os.RemoveAll(gopath)
-	repoDir := filepath.Join(gopath, "src", repo)
+func NewUpstreamSource(gopath, repo, revision string) (*upstream, error) {
 
 	var u upstream
+	var err error
+
+	u.repoDir = filepath.Join(gopath, "src", repo)
 
 	log.Printf("Downloading %q\n", repo+"/...")
 	if err := u.get(gopath, repo, revision); err != nil {
@@ -227,15 +225,15 @@ func makeUpstreamSourceTarball(repo, revision string) (*upstream, error) {
 	}
 
 	// Verify early this repository uses git (we call pkgVersionFromGit later):
-	if _, err := os.Stat(filepath.Join(repoDir, ".git")); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(u.repoDir, ".git")); os.IsNotExist(err) {
 		return nil, fmt.Errorf("Not a git repository, dh-make-golang currently only supports git")
 	}
 
-	if _, err := os.Stat(filepath.Join(repoDir, "debian")); err == nil {
+	if _, err := os.Stat(filepath.Join(u.repoDir, "debian")); err == nil {
 		log.Printf("WARNING: ignoring debian/ directory that came with the upstream sources\n")
 	}
 
-	u.vendorDirs, err = findVendorDirs(repoDir)
+	u.vendorDirs, err = findVendorDirs(u.repoDir)
 	if err != nil {
 		return nil, err
 	}
@@ -249,8 +247,7 @@ func makeUpstreamSourceTarball(repo, revision string) (*upstream, error) {
 	}
 
 	log.Printf("Determining upstream version number\n")
-
-	u.version, err = pkgVersionFromGit(repoDir)
+	u.version, err = pkgVersionFromGit(u.repoDir)
 	if err != nil {
 		return nil, err
 	}
@@ -777,7 +774,14 @@ func ExecMake(args []string, usage func()) {
 		golangBinaries, err = getGolangBinaries()
 		return err
 	})
-	u, err := makeUpstreamSourceTarball(gopkg, gitRevision)
+
+	gopath, err := ioutil.TempDir("", "dh-make-golang")
+	if err != nil {
+		log.Fatalf("Could not create a tmp directory")
+	}
+	defer os.RemoveAll(gopath)
+
+	u, err := NewUpstreamSource(gopath, gopkg, gitRevision)
 	if err != nil {
 		log.Fatalf("Could not create a tarball of the upstream source: %v\n", err)
 	}
