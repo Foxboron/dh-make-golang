@@ -91,7 +91,7 @@ func (u *upstream) get(gopath, repo, rev string) error {
 	return rr.VCS.Create(dir, rr.Repo)
 }
 
-func (u *upstream) tar(gopath, repo string) error {
+func (u *upstream) Tar(gopath, repo string) error {
 	f, err := ioutil.TempFile("", "dh-make-golang")
 	if err != nil {
 		return err
@@ -259,10 +259,6 @@ func NewUpstreamSource(gopath, repo, revision string) (*upstream, error) {
 	}
 
 	if err := u.findDependencies(gopath, repo); err != nil {
-		return nil, err
-	}
-
-	if err := u.tar(gopath, repo); err != nil {
 		return nil, err
 	}
 
@@ -783,6 +779,11 @@ func ExecMake(args []string, usage func()) {
 
 	u, err := NewUpstreamSource(gopath, gopkg, gitRevision)
 	if err != nil {
+		log.Fatalf("Could not create a tarball of the upstream source: %v\n", err)
+	}
+
+	// Tar archive
+	if err := u.Tar(gopath, gopkg); err != nil {
 		log.Fatalf("Could not create a tarball of the upstream source: %v\n", err)
 	}
 
