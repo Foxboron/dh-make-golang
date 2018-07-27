@@ -132,7 +132,7 @@ func getLicenseForGopkg(gopkg string) (string, string, error) {
 		return "", "", err
 	}
 
-	if deblicense, ok := githubLicenseToDebianLicense[rl.GetLicense().GetKey()]; ok {
+	if deblicense, ok := GithubLicenseToDistroLicense[rl.GetLicense().GetKey()]; ok {
 		fulltext := debianLicenseText[deblicense]
 		if fulltext == "" {
 			fulltext = "TODO"
