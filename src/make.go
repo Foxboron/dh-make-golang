@@ -67,12 +67,12 @@ func findVendorDirs(dir string) ([]string, error) {
 
 // upstream describes the upstream repo we are about to package.
 type upstream struct {
-	tarPath    string   // path to the generated orig tarball
-	repoDir    string   // path to the repository
-	version    string   // Debian package version number, e.g. 0.0~git20180204.1d24609-1
-	firstMain  string   // import path of the first main package within repo, if any
-	vendorDirs []string // all vendor sub directories, relative to the repo directory
-	repoDeps   []string // the repository paths of all dependencies (e.g. github.com/zyedidia/glob)
+	TarPath    string   // path to the generated orig tarball
+	RepoDir    string   // path to the repository
+	Version    string   // Debian package version number, e.g. 0.0~git20180204.1d24609-1
+	FirstMain  string   // import path of the first main package within repo, if any
+	VendorDirs []string // all vendor sub directories, relative to the repo directory
+	RepoDeps   []string // the repository paths of all dependencies (e.g. github.com/zyedidia/glob)
 }
 
 func (u *upstream) get(gopath, repo, rev string) error {
@@ -96,14 +96,14 @@ func (u *upstream) Tar(gopath, repo string) error {
 	if err != nil {
 		return err
 	}
-	u.tarPath = f.Name()
+	u.TarPath = f.Name()
 	f.Close()
 	base := filepath.Base(repo)
 	dir := filepath.Dir(repo)
 	cmd := exec.Command(
 		"tar",
 		"cJf",
-		u.tarPath,
+		u.TarPath,
 		"--exclude=.git",
 		"--exclude=Godeps",
 		fmt.Sprintf("--exclude=%s/debian", base),
@@ -114,10 +114,10 @@ func (u *upstream) Tar(gopath, repo string) error {
 }
 
 func (u *upstream) RemoveVendor() error {
-	if len(u.vendorDirs) > 0 {
+	if len(u.VendorDirs) > 0 {
 		log.Printf("Deleting upstream vendor/ directories")
-		for _, dir := range u.vendorDirs {
-			if err := os.RemoveAll(filepath.Join(u.repoDir, dir)); err != nil {
+		for _, dir := range u.VendorDirs {
+			if err := os.RemoveAll(filepath.Join(u.RepoDir, dir)); err != nil {
 				return err
 			}
 		}
@@ -146,7 +146,7 @@ func (u *upstream) findMains(gopath, repo string) error {
 			continue
 		}
 		if strings.HasSuffix(line, " main") {
-			u.firstMain = strings.TrimSuffix(line, " main")
+			u.FirstMain = strings.TrimSuffix(line, " main")
 			break
 		}
 	}
@@ -216,9 +216,9 @@ func (u *upstream) findDependencies(gopath, repo string) error {
 		roots[rr.Root] = true
 	}
 
-	u.repoDeps = make([]string, 0, len(godependencies))
+	u.RepoDeps = make([]string, 0, len(godependencies))
 	for root := range roots {
-		u.repoDeps = append(u.repoDeps, root)
+		u.RepoDeps = append(u.RepoDeps, root)
 	}
 
 	return nil
@@ -229,7 +229,7 @@ func NewUpstreamSource(gopath, repo, revision string) (*upstream, error) {
 	var u upstream
 	var err error
 
-	u.repoDir = filepath.Join(gopath, "src", repo)
+	u.RepoDir = filepath.Join(gopath, "src", repo)
 
 	log.Printf("Downloading %q\n", repo+"/...")
 	if err := u.get(gopath, repo, revision); err != nil {
@@ -237,26 +237,26 @@ func NewUpstreamSource(gopath, repo, revision string) (*upstream, error) {
 	}
 
 	// Verify early this repository uses git (we call pkgVersionFromGit later):
-	if _, err := os.Stat(filepath.Join(u.repoDir, ".git")); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(u.RepoDir, ".git")); os.IsNotExist(err) {
 		return nil, fmt.Errorf("Not a git repository, dh-make-golang currently only supports git")
 	}
 
-	if _, err := os.Stat(filepath.Join(u.repoDir, "debian")); err == nil {
+	if _, err := os.Stat(filepath.Join(u.RepoDir, "debian")); err == nil {
 		log.Printf("WARNING: ignoring debian/ directory that came with the upstream sources\n")
 	}
 
-	u.vendorDirs, err = findVendorDirs(u.repoDir)
+	u.VendorDirs, err = findVendorDirs(u.RepoDir)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Printf("Determining upstream version number\n")
-	u.version, err = pkgVersionFromGit(u.repoDir)
+	u.Version, err = pkgVersionFromGit(u.RepoDir)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("Package version is %q\n", u.version)
+	log.Printf("Package version is %q\n", u.Version)
 
 	if err := u.findMains(gopath, repo); err != nil {
 		return nil, err
@@ -797,8 +797,8 @@ func ExecMake(args []string, usage func()) {
 	}
 
 	if strings.TrimSpace(pkgType) == "" {
-		if u.firstMain != "" {
-			log.Printf("Assuming you are packaging a program (because %q defines a main package), use -type to override\n", u.firstMain)
+		if u.FirstMain != "" {
+			log.Printf("Assuming you are packaging a program (because %q defines a main package), use -type to override\n", u.FirstMain)
 			pkgType = "program"
 			debsrc = NameFromGopkg(gopkg, pkgType, allowUnknownHoster)
 		} else {
@@ -823,25 +823,25 @@ func ExecMake(args []string, usage func()) {
 			debbin, debbin)
 	}
 
-	orig := fmt.Sprintf("%s_%s.orig.tar.xz", debsrc, u.version)
+	orig := fmt.Sprintf("%s_%s.orig.tar.xz", debsrc, u.Version)
 	// We need to copy the file, merely renaming is not enough since the file
 	// might be on a different filesystem (/tmp often is a tmpfs).
-	if err := copyFile(u.tarPath, orig); err != nil {
-		log.Fatalf("Could not rename orig tarball from %q to %q: %v\n", u.tarPath, orig, err)
+	if err := copyFile(u.TarPath, orig); err != nil {
+		log.Fatalf("Could not rename orig tarball from %q to %q: %v\n", u.TarPath, orig, err)
 	}
-	if err := os.Remove(u.tarPath); err != nil {
-		log.Printf("Could not remove tempfile %q: %v\n", u.tarPath, err)
+	if err := os.Remove(u.TarPath); err != nil {
+		log.Printf("Could not remove tempfile %q: %v\n", u.TarPath, err)
 	}
 
-	debversion := u.version + "-1"
+	debversion := u.Version + "-1"
 
 	dir, err := createGitRepository(debsrc, gopkg, orig)
 	if err != nil {
 		log.Fatalf("Could not create git repository: %v\n", err)
 	}
 
-	debdependencies := make([]string, 0, len(u.repoDeps))
-	for _, dep := range u.repoDeps {
+	debdependencies := make([]string, 0, len(u.RepoDeps))
+	for _, dep := range u.RepoDeps {
 		if len(golangBinaries) == 0 {
 			// fall back to heuristic
 			debdependencies = append(debdependencies, NameFromGopkg(dep, "library", allowUnknownHoster)+"-dev")
@@ -855,7 +855,7 @@ func ExecMake(args []string, usage func()) {
 		debdependencies = append(debdependencies, bin)
 	}
 
-	if err := writeTemplates(dir, gopkg, debsrc, debbin, debversion, pkgType, debdependencies, u.vendorDirs); err != nil {
+	if err := writeTemplates(dir, gopkg, debsrc, debbin, debversion, pkgType, debdependencies, u.VendorDirs); err != nil {
 		log.Fatalf("Could not create debian/ from templates: %v\n", err)
 	}
 
