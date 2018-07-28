@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-func execCreateSalsaProject(args []string) {
+func ExecCreateSalsaProject(args []string) {
 	fs := flag.NewFlagSet("create-salsa-project", flag.ExitOnError)
 
 	fs.Usage = func() {
