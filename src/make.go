@@ -133,10 +133,10 @@ func (u *upstream) findMains(gopath, repo string) error {
 	cmd.Env = append([]string{
 		fmt.Sprintf("GOPATH=%s", gopath),
 	}, passthroughEnv()...)
-	out, err := cmd.Output()
-	if err != nil {
-		return fmt.Errorf("%v: %v", cmd.Args, err)
-	}
+	out, _ := cmd.Output()
+	// if err != nil {
+	// 	return fmt.Errorf("%v: %v", cmd.Args, err)
+	// }
 	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
 		if strings.Contains(line, "/vendor/") ||
 			strings.Contains(line, "/Godeps/") ||
@@ -162,10 +162,10 @@ func (u *upstream) findDependencies(gopath, repo string) error {
 		fmt.Sprintf("GOPATH=%s", gopath),
 	}, passthroughEnv()...)
 
-	out, err := cmd.Output()
-	if err != nil {
-		return fmt.Errorf("%v: %v", cmd.Args, err)
-	}
+	out, _ := cmd.Output()
+	// if err != nil {
+	// 	return fmt.Errorf("%v: %v", cmd.Args, err)
+	// }
 
 	godependencies := make(map[string]bool)
 	for _, p := range strings.Split(strings.TrimSpace(string(out)), "\n") {
@@ -195,7 +195,7 @@ func (u *upstream) findDependencies(gopath, repo string) error {
 		fmt.Sprintf("GOPATH=%s", gopath),
 	}, passthroughEnv()...)
 
-	out, err = cmd.Output()
+	out, err := cmd.Output()
 	if err != nil {
 		return fmt.Errorf("%v: %v", cmd.Args, err)
 	}
