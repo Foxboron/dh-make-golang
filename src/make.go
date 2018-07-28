@@ -250,6 +250,15 @@ func NewUpstreamSource(gopath, repo, revision string) (*upstream, error) {
 		return nil, err
 	}
 
+	if len(u.VendorDirs) > 0 {
+		log.Printf("Deleting upstream vendor/ directories")
+		for _, dir := range u.VendorDirs {
+			if err := os.RemoveAll(filepath.Join(u.RepoDir, dir)); err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	log.Printf("Determining upstream version number\n")
 	u.Version, err = pkgVersionFromGit(u.RepoDir)
 	if err != nil {
