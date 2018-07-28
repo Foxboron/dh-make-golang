@@ -1,6 +1,7 @@
 package src
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"io"
@@ -128,15 +129,26 @@ func (u *upstream) RemoveVendor() error {
 // findMains finds main packages within the repo (useful to auto-detect the
 // package type).
 func (u *upstream) findMains(gopath, repo string) error {
+	var errbuf bytes.Buffer
 	cmd := exec.Command("go", "list", "-f", "{{.ImportPath}} {{.Name}}", repo+"/...")
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = &errbuf
 	cmd.Env = append([]string{
 		fmt.Sprintf("GOPATH=%s", gopath),
 	}, passthroughEnv()...)
+
+	// Some packages complain about being unable to load packages
+	// We can however continue despite this error.
+	// Make sure we don't have any other errors and continue
+	if errbuf.Len() != 0 {
+		for _, v := range strings.Split(errbuf.String(), "\n") {
+			if !strings.HasPrefix(v, "can't load package:") {
+				return fmt.Errorf("%v: %v", "Errors running command:", cmd.Args)
+			}
+		}
+	}
+
 	out, _ := cmd.Output()
-	// if err != nil {
-	// 	return fmt.Errorf("%v: %v", cmd.Args, err)
-	// }
+
 	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
 		if strings.Contains(line, "/vendor/") ||
 			strings.Contains(line, "/Godeps/") ||
@@ -156,16 +168,22 @@ func (u *upstream) findMains(gopath, repo string) error {
 func (u *upstream) findDependencies(gopath, repo string) error {
 	log.Printf("Determining dependencies\n")
 
+	var errbuf bytes.Buffer
 	cmd := exec.Command("go", "list", "-f", "{{join .Imports \"\\n\"}}\n{{join .TestImports \"\\n\"}}\n{{join .XTestImports \"\\n\"}}", repo+"/...")
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = &errbuf
 	cmd.Env = append([]string{
 		fmt.Sprintf("GOPATH=%s", gopath),
 	}, passthroughEnv()...)
 
+	if errbuf.Len() != 0 {
+		for _, v := range strings.Split(errbuf.String(), "\n") {
+			if !strings.HasPrefix(v, "can't load package:") {
+				return fmt.Errorf("%v: %v", "Errors running command:", cmd.Args)
+			}
+		}
+	}
+
 	out, _ := cmd.Output()
-	// if err != nil {
-	// 	return fmt.Errorf("%v: %v", cmd.Args, err)
-	// }
 
 	godependencies := make(map[string]bool)
 	for _, p := range strings.Split(strings.TrimSpace(string(out)), "\n") {
