@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	dh "github.com/foxboron/dh-make-golang"
+	dh "github.com/foxboron/dh-make-golang/src"
 	"github.com/google/go-github/github"
 	"github.com/gregjones/httpcache"
 )
