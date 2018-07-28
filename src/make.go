@@ -524,12 +524,16 @@ func writeTemplates(dir, gopkg, debsrc, debbin, debversion, pkgType string, depe
 	}
 	fmt.Fprintf(f, " %s\n", longdescription)
 
-	license, fulltext, err := getLicenseForGopkg(gopkg)
+	githubLicense, err := GetLicenseForGopkg(gopkg)
+	if err != nil {
+		log.Printf("Could not fetch license from github")
+	}
+
+	license, fulltext, err := checkDebianLicense(githubLicense)
 	if err != nil {
 		log.Printf("Could not determine license for %q: %v\n", gopkg, err)
-		license = "TODO"
-		fulltext = "TODO"
 	}
+
 	f, err = os.Create(filepath.Join(dir, "debian", "copyright"))
 	if err != nil {
 		return err
@@ -618,10 +622,14 @@ func writeITP(gopkg, debsrc, debversion string) (string, error) {
 	defer f.Close()
 
 	// TODO: memoize
-	license, _, err := getLicenseForGopkg(gopkg)
+	githubLicense, err := GetLicenseForGopkg(gopkg)
 	if err != nil {
 		log.Printf("Could not determine license for %q: %v\n", gopkg, err)
-		license = "TODO"
+	}
+
+	license, _, err := checkDebianLicense(githubLicense)
+	if err != nil {
+		log.Printf("Could not determine license for %q: %v\n", gopkg, err)
 	}
 
 	author, _, err := getAuthorAndCopyrightForGopkg(gopkg)

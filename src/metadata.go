@@ -121,26 +121,28 @@ func findGitHubRepo(gopkg string) (owner string, repo string, _ error) {
 	return parts[0], parts[1], nil
 }
 
-func getLicenseForGopkg(gopkg string) (string, string, error) {
+func GetLicenseForGopkg(gopkg string) (string, error) {
 	owner, repo, err := findGitHubRepo(gopkg)
 	if err != nil {
-		return "", "", err
+		return "TODO", err
 	}
-
 	rl, _, err := GitHub.Repositories.License(context.TODO(), owner, repo)
 	if err != nil {
-		return "", "", err
+		return "TODO", err
 	}
 
-	if deblicense, ok := GithubLicenseToDistroLicense[rl.GetLicense().GetKey()]; ok {
+	return rl.GetLicense().GetKey(), nil
+}
+
+func checkDebianLicense(license string) (string, string, error) {
+	if deblicense, ok := GithubLicenseToDistroLicense[license]; ok {
 		fulltext := debianLicenseText[deblicense]
 		if fulltext == "" {
 			fulltext = "TODO"
 		}
 		return deblicense, fulltext, nil
-	} else {
-		return "TODO", "TODO", nil
 	}
+	return "TODO", "TODO", nil
 }
 
 func getAuthorAndCopyrightForGopkg(gopkg string) (string, string, error) {
