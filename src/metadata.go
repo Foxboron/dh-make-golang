@@ -175,7 +175,7 @@ func getAuthorAndCopyrightForGopkg(gopkg string) (string, string, error) {
 	return ur.GetName(), copyright, nil
 }
 
-func getDescriptionForGopkg(gopkg string) (string, error) {
+func GetDescriptionForGopkg(gopkg string) (string, error) {
 	owner, repo, err := findGitHubRepo(gopkg)
 	if err != nil {
 		return "", err
@@ -189,7 +189,7 @@ func getDescriptionForGopkg(gopkg string) (string, error) {
 	return strings.TrimSpace(rr.GetDescription()), nil
 }
 
-func getHomepageForGopkg(gopkg string) string {
+func GetHomepageForGopkg(gopkg string) string {
 	owner, repo, err := findGitHubRepo(gopkg)
 	if err != nil {
 		return "TODO"

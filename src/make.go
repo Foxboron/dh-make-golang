@@ -521,7 +521,7 @@ func writeTemplates(dir, gopkg, debsrc, debbin, debversion, pkgType string, depe
 	builddeps := append([]string{"debhelper (>= 11)", "dh-golang", "golang-any"}, dependencies...)
 	fmt.Fprintf(f, "Build-Depends: %s\n", strings.Join(builddeps, ",\n               "))
 	fmt.Fprintf(f, "Standards-Version: 4.1.4\n")
-	fmt.Fprintf(f, "Homepage: %s\n", getHomepageForGopkg(gopkg))
+	fmt.Fprintf(f, "Homepage: %s\n", GetHomepageForGopkg(gopkg))
 	fmt.Fprintf(f, "Vcs-Browser: https://salsa.debian.org/go-team/packages/%s\n", debsrc)
 	fmt.Fprintf(f, "Vcs-Git: https://salsa.debian.org/go-team/packages/%s.git\n", debsrc)
 	fmt.Fprintf(f, "XS-Go-Import-Path: %s\n", gopkg)
@@ -538,7 +538,7 @@ func writeTemplates(dir, gopkg, debsrc, debbin, debversion, pkgType string, depe
 		deps = append(deps, dependencies...)
 	}
 	fmt.Fprintf(f, "Depends: %s\n", strings.Join(deps, ",\n         "))
-	description, err := getDescriptionForGopkg(gopkg)
+	description, err := GetDescriptionForGopkg(gopkg)
 	if err != nil {
 		log.Printf("Could not determine description for %q: %v\n", gopkg, err)
 		description = "TODO: short description"
@@ -573,7 +573,7 @@ func writeTemplates(dir, gopkg, debsrc, debbin, debversion, pkgType string, depe
 	}
 	fmt.Fprintf(f, "Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/\n")
 	fmt.Fprintf(f, "Upstream-Name: %s\n", filepath.Base(gopkg))
-	fmt.Fprintf(f, "Source: %s\n", getHomepageForGopkg(gopkg))
+	fmt.Fprintf(f, "Source: %s\n", GetHomepageForGopkg(gopkg))
 	fmt.Fprintf(f, "Files-Excluded:\n")
 	for _, dir := range vendorDirs {
 		fmt.Fprintf(f, "  %s\n", dir)
@@ -665,7 +665,7 @@ func writeITP(gopkg, debsrc, debversion string) (string, error) {
 		author = "TODO"
 	}
 
-	description, err := getDescriptionForGopkg(gopkg)
+	description, err := GetDescriptionForGopkg(gopkg)
 	if err != nil {
 		log.Printf("Could not determine description for %q: %v\n", gopkg, err)
 		description = "TODO"
@@ -685,7 +685,7 @@ func writeITP(gopkg, debsrc, debversion string) (string, error) {
 	fmt.Fprintf(f, "* Package name    : %s\n", debsrc)
 	fmt.Fprintf(f, "  Version         : %s\n", debversion)
 	fmt.Fprintf(f, "  Upstream Author : %s\n", author)
-	fmt.Fprintf(f, "* URL             : %s\n", getHomepageForGopkg(gopkg))
+	fmt.Fprintf(f, "* URL             : %s\n", GetHomepageForGopkg(gopkg))
 	fmt.Fprintf(f, "* License         : %s\n", license)
 	fmt.Fprintf(f, "  Programming Lang: Go\n")
 	fmt.Fprintf(f, "  Description     : %s\n", description)
